@@ -109,7 +109,7 @@ exports.get_options = function (connection) {
   }
 
   if (connection.transaction.mail_from) {
-    let mfaddr = connection.transaction.mail_from.address().toString()
+    const mfaddr = connection.transaction.mail_from.address().toString()
 
     // If cannot encode to utf-8 mime string then default to manual sanitanization
     const buffer = Buffer.from(mfaddr, 'utf8')
