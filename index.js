@@ -6,9 +6,6 @@ const http = require('node:http')
 // haraka libs
 const DSN = require('haraka-dsn')
 
-// mime libs
-const libmime = require('libmime')
-
 exports.register = function () {
   this.load_rspamd_ini()
 }
@@ -114,19 +111,14 @@ exports.get_options = function (connection) {
   if (connection.transaction.mail_from) {
     let mfaddr = connection.transaction.mail_from.address().toString()
 
-    try {
-      // encode to utf-8 mime string that is pure ASCII
-      mfaddr = libmime.encodeWord(mfaddr)
-    } catch {
-      // If cannot encode to utf-8 mime string then default to manual sanitanization
-      const buffer = Buffer.from(mfaddr, 'utf8')
-      mfaddr = buffer
-        .toString('utf8')
-        .replace(/\uFFFD/g, '') // replace wrong bytes' placeholder (�)
-        // eslint-disable-next-line no-control-regex
-        .replace(/[\x00-\x1F\x7F]/g, '') // remove control chars
-        .trim()
-    }
+    // If cannot encode to utf-8 mime string then default to manual sanitanization
+    const buffer = Buffer.from(mfaddr, 'utf8')
+    mfaddr = buffer
+      .toString('utf8')
+      .replace(/\uFFFD/g, '') // replace wrong bytes' placeholder (�)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F]/g, '') // remove control chars
+      .trim()
 
     if (mfaddr) {
       options.headers.From = mfaddr
@@ -239,7 +231,16 @@ exports.hook_data_post = function (next, connection) {
     if (calledNext) return
     calledNext = true
     if (!connection?.transaction) return
-    next(code, msg)
+
+    // fully wait until request stream closes so that next plugins can pipe to message_stream
+    req.once('close', () => {
+      next(code, msg)
+    })
+
+    // if we need to go to next hook then destroy request
+    if (!req.destroyed) {
+      req.destroy()
+    }
   }
 
   timer = setTimeout(() => {
