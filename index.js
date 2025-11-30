@@ -111,15 +111,6 @@ exports.get_options = function (connection) {
   if (connection.transaction.mail_from) {
     const mfaddr = connection.transaction.mail_from.address().toString()
 
-    // If cannot encode to utf-8 mime string then default to manual sanitanization
-    const buffer = Buffer.from(mfaddr, 'utf8')
-    mfaddr = buffer
-      .toString('utf8')
-      .replace(/\uFFFD/g, '') // replace wrong bytes' placeholder (�)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x1F\x7F]/g, '') // remove control chars
-      .trim()
-
     if (mfaddr) {
       options.headers.From = mfaddr
     }
@@ -232,7 +223,7 @@ exports.hook_data_post = function (next, connection) {
     calledNext = true
     if (!connection?.transaction) return
 
-    // fully wait until request stream closes so that next plugins can pipe to message_stream
+    // wait until request stream closes
     req.once('close', () => {
       next(code, msg)
     })
