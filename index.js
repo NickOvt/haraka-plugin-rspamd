@@ -111,9 +111,7 @@ exports.get_options = function (connection) {
   if (connection.transaction.mail_from) {
     const mfaddr = connection.transaction.mail_from.address().toString()
 
-    if (mfaddr) {
-      options.headers.From = mfaddr
-    }
+    if (mfaddr) options.headers.From = mfaddr
   }
 
   const rcpts = connection.transaction.rcpt_to
