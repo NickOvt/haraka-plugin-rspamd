@@ -109,20 +109,9 @@ exports.get_options = function (connection) {
   }
 
   if (connection.transaction.mail_from) {
-    let mfaddr = connection.transaction.mail_from.address().toString()
+    const mfaddr = connection.transaction.mail_from.address().toString()
 
-    // If cannot encode to utf-8 mime string then default to manual sanitanization
-    const buffer = Buffer.from(mfaddr, 'utf8')
-    mfaddr = buffer
-      .toString('utf8')
-      .replace(/\uFFFD/g, '') // replace wrong bytes' placeholder (�)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x1F\x7F]/g, '') // remove control chars
-      .trim()
-
-    if (mfaddr) {
-      options.headers.From = mfaddr
-    }
+    if (mfaddr) options.headers.From = mfaddr
   }
 
   const rcpts = connection.transaction.rcpt_to
