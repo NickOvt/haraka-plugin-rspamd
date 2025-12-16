@@ -298,9 +298,6 @@ exports.hook_data_post = function (next, connection) {
     nextOnce()
   })
 
-  // ensure req.end() is always called when using http.request()
-  connection.transaction.message_stream.once('end', () => req.end())
-
   connection.transaction.message_stream.pipe(req)
   // pipe calls req.end() asynchronously
 }
